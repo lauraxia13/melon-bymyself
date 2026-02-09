@@ -1,29 +1,35 @@
-name: Check Melon Ticket
+name: Melon Ticket Check (No Slack)
 
 on:
   schedule:
-    - cron: '*/5 * * * *'   # 每5分钟运行一次
-  workflow_dispatch:        # 允许你手动点运行
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
 
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Check Melon Ticket
-        uses: mooyoul/melon-ticket-actions@v1.1.0
-        with:
-          product-id: 212678        # 先随便填
-          schedule-id: 100003       # 先随便填
-          seat-id: ST0001              # 示例
-          message: '🎫 Melon 有票了！快去抢！'
+      - name: Check Melon Ticket Page
+        id: check
+        run: |
+          curl -s 'https://ticket.melon.com/performance/index.htm?prodId=212678' > page.html
+          if grep -q "예매하기" page.html; then
+            echo "available=true" >> $GITHUB_OUTPUT
+          else
+            echo "available=false" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Create issue when ticket is available
-        if: success()
+      - name: Create GitHub Issue if available
+        if: steps.check.outputs.available == 'true'
         uses: actions/github-script@v7
         with:
           script: |
             await github.rest.issues.create({
               owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "🎫 Melon 有票了！",
+              body: "检测到 Melon 页面出现【예매하기】，请立刻前往抢票！"
+            })
               repo: context.repo.repo,
               title: "🎫 Melon 有票提醒",
               body: "检测到 Melon 有票了，快去官网抢！"

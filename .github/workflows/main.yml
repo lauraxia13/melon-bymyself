@@ -1,0 +1,17 @@
+name: Check Melon Ticket
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # 每5分钟运行一次
+  workflow_dispatch:        # 允许你手动点运行
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Melon Ticket
+        uses: mooyoul/melon-ticket-actions@v1.1.0
+        with:
+          product-id: 212678        # 先随便填
+          schedule-id: 100003       # 先随便填
+          seat-id: ST0001              # 示例

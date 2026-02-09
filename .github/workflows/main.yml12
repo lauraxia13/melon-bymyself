@@ -1,0 +1,36 @@
+name: Melon Ticket Monitor (FINAL)
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check-ticket:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fetch Melon Page
+        run: |
+          curl -L -s "https://ticket.melon.com/performance/index.htm?prodId=212678" > page.html
+
+      - name: Check ticket availability
+        id: check
+        run: |
+          if grep -q "예매하기" page.html; then
+            echo "available=true" >> $GITHUB_OUTPUT
+          else
+            echo "available=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Notify via GitHub Issue
+        if: steps.check.outputs.available == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "🎫 Melon 有票了！",
+              body: "检测到 Melon 页面出现【예매하기】按钮，请立刻前往抢票！\n\n链接：https://ticket.melon.com/performance/index.htm?prodId=212678"
+            })

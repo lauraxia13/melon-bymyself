@@ -15,3 +15,16 @@ jobs:
           product-id: 212678        # 先随便填
           schedule-id: 100003       # 先随便填
           seat-id: ST0001              # 示例
+          message: '🎫 Melon 有票了！快去抢！'
+
+      - name: Create issue when ticket is available
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "🎫 Melon 有票提醒",
+              body: "检测到 Melon 有票了，快去官网抢！"
+            });
